@@ -1,9 +1,9 @@
 import React, { Component } from "react";
 import NewsItem from "./NewsItem";
 import Spinner from "./Spinner";
-import PropTypes from 'prop-types';
-
-
+import PropTypes from "prop-types";
+import InfiniteScroll from "react-infinite-scroll-component";
+// import LoadingBar from 'react-top-loading-bar';
 
 export default class News extends Component {
   // articles = [
@@ -76,114 +76,182 @@ export default class News extends Component {
   //       "Last week, we at ESPNcricinfo did something we have been thinking of doing for eight years now: pretend-live ball-by-ball commentary for a classic cricket match. We knew the result, yes, but we tried… [+6823 chars]",
   //   },
   // ];
-  
+
   static defaultProps = {
-    country:'in',
-    pageSize:9,
-    category:'general',
-  }
+    country: "in",
+    pageSize: 9,
+    category: "general",
+  };
 
   static propTypes = {
-    country:PropTypes.string,
-    pageSize:PropTypes.number,
-    category:PropTypes.string,
-  }
+    country: PropTypes.string,
+    pageSize: PropTypes.number,
+    category: PropTypes.string,
+  };
+  capitalize = (string) => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
 
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     //console.log("Hello I am a constructor from News component");
 
     this.state = {
-     // articles: this.articles,
-     articles:[],
-      loading: false,
-      page:1,
+      // articles: this.articles,
+      articles: [],
+      loading: true,
+      page: 1,
+      totalResults:0,
     };
+    document.title = `${this.capitalize(this.props.category)} - NewsMonkey`;
+  }
+
+  async updateNews() {
+    this.props.setProgress(10);
+    const url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=95ab57f4a45d4ec89152103b4b89b35f&page=${this.state.page}&pageSize=${this.props.pageSize}`;
+    this.setState({ laoding: true });
+    let data = await fetch(url);
+    this.props.setProgress(30);
+    let parsedData = await data.json();
+    this.props.setProgress(70);
+
+    //console.log(parsedData);
+    this.setState({
+      articles: parsedData.articles,
+      totalResults: parsedData.totalResults,
+      loading: false,
+    });
+    this.props.setProgress(100);
   }
 
   async componentDidMount() {
     //console.log("cdm")
-    let url =
-      `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=95ab57f4a45d4ec89152103b4b89b35f&pageSize=${this.props.pageSize}`;
-    this.setState({laoding:true});
-    let data = await fetch(url);
-    let parsedData = await data.json();
+    // let url =
+    //   `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=95ab57f4a45d4ec89152103b4b89b35f&pageSize=${this.props.pageSize}`;
+    // this.setState({laoding:true});
+    // let data = await fetch(url);
+    // let parsedData = await data.json();
 
     //console.log(parsedData);
-    this.setState({ articles: parsedData.articles , totalResults: parsedData.totalResults,loading:false });
+    //this.setState({ articles: parsedData.articles , totalResults: parsedData.totalResults,loading:false });
+    this.updateNews();
   }
 
-   handleNextClick = async ()=>{
+  handleNextClick = async () => {
     //console.log("next")
-    if(!(this.state.page+1 > Math.ceil(this.state.totalResults/this.props.pageSize))){
-      this.setState({laoding:true});
-       let url =
-      `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=95ab57f4a45d4ec89152103b4b89b35f&page=${this.state.page+1}&pageSize=${this.props.pageSize}`;
+    // if(!(this.state.page+1 > Math.ceil(this.state.totalResults/this.props.pageSize))){
+    //   this.setState({laoding:true});
+    //    let url =
+    //   `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=95ab57f4a45d4ec89152103b4b89b35f&page=${this.state.page+1}&pageSize=${this.props.pageSize}`;
 
+    // let data = await fetch(url);
+    // let parsedData = await data.json();
+    // //console.log(parsedData);
+
+    // this.setState({
+    //   articles: parsedData.articles,
+    //   page:this.state.page+1,
+    //   loading:false,
+    // })
+    this.setState({ page: this.state.page + 1 });
+    this.updateNews();
+  };
+
+  handlePrevClick = async () => {
+    // //console.log("prev")
+    // let url =
+    //   `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=95ab57f4a45d4ec89152103b4b89b35f&page=${this.state.page-1}&pageSize=${this.props.pageSize}`;
+    // this.setState({laoding:true});
+    // let data = await fetch(url);
+    // let parsedData = await data.json();
+    // //console.log(parsedData);
+
+    // this.setState({
+    //   articles: parsedData.articles,
+    //   page:this.state.page-1,
+    //   loading:false,
+    // })
+    this.setState({ page: this.state.page - 1 });
+    this.updateNews();
+  };
+
+  fetchMoreData =async()=>{
+    this.setState({page:this.state.page +1})
+    // this.updateNews()
+    const url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=95ab57f4a45d4ec89152103b4b89b35f&page=${this.state.page}&pageSize=${this.props.pageSize}`;
+    this.setState({ laoding: true });
     let data = await fetch(url);
     let parsedData = await data.json();
+
     //console.log(parsedData);
-
     this.setState({
-      articles: parsedData.articles,
-      page:this.state.page+1,
-      loading:false,
-    })
-  }
-
-  }
-
-   handlePrevClick = async()=>{
-    //console.log("prev")
-    let url =
-      `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=95ab57f4a45d4ec89152103b4b89b35f&page=${this.state.page-1}&pageSize=${this.props.pageSize}`;
-    this.setState({laoding:true});
-    let data = await fetch(url);
-    let parsedData = await data.json();
-    //console.log(parsedData);
-
-    this.setState({
-      articles: parsedData.articles,
-      page:this.state.page-1,
-      loading:false,
-    })
+      articles: this.state.articles.concat(parsedData.articles),
+      totalResults: parsedData.totalResults,
+      loading: false,
+    });
   }
 
   render() {
     //console.log("render");
     return (
-      <div className="container my-3 ">
-        <h1 className = "text-center">NewsMonkey - Top Headlines</h1>
+      <>
+        <h1 className="text-center">
+          NewsMonkey - Top {this.capitalize(this.props.category)} Headlines{" "}
+        </h1>
         {this.state.loading && <Spinner/>}
-        <div className="row my-2">
-          {!this.state.loading && this.state.articles.map((element) => {
-            // console.log(element)
-            return (
-              <div className="col-md-4 my-3" key={element.url}>
-                <NewsItem
-                  title={element.title ? element.title: ""}
-                  description={
-                    element.description ? element.description: ""
-                  }
-                  imageUrl={
-                    element.urlToImage
-                      ? element.urlToImage
-                      :"https://ichef.bbci.co.uk/news/1024/branded_news/167DC/production/_131542129_c0889d86a4d6e4a5bd19891f89daad179af875090_390_5768_32441000x563.jpg"
-                  }
-                  newsUrl={element.url}
-                  author = {element.author ?element.author:"Unknown" }
-                  date = {element.publishedAt}
-                  source = {element.source.name}
-                />
-              </div>
-            );
-          })}
-        </div>
-        <div className="container d-flex justify-content-between">
-        <button disabled = {this.state.page<=1} type="button" className="btn btn-dark" onClick = {this.handlePrevClick}>&larr; Previous</button>
-        <button disabled = {this.state.page+1 > Math.ceil(this.state.totalResults/this.props.pageSize)} type="button" className="btn btn-dark" onClick = {this.handleNextClick}>Next &rarr; </button>
-        </div>
-      </div>
+        <InfiniteScroll
+          dataLength={this.state.articles.length}
+          next={this.fetchMoreData}
+          hasMore={this.state.articles.length !== this.state.totalResults}
+          loader={this.state.loading && <Spinner/>}
+        >
+          <div className="container">
+          <div className="row my-2">
+            {this.state.articles.map((element) => {
+              // console.log(element)
+              return (
+                <div className="col-md-4 my-3" key={element.url}>
+                  <NewsItem
+                    title={element.title ? element.title : ""}
+                    description={element.description ? element.description : ""}
+                    imageUrl={
+                      element.urlToImage
+                        ? element.urlToImage
+                        : "https://ichef.bbci.co.uk/news/1024/branded_news/167DC/production/_131542129_c0889d86a4d6e4a5bd19891f89daad179af875090_390_5768_32441000x563.jpg"
+                    }
+                    newsUrl={element.url}
+                    author={element.author ? element.author : "Unknown"}
+                    date={element.publishedAt}
+                    source={element.source.name}
+                  />
+                </div>
+              );
+            })}
+          </div>
+          </div>
+        </InfiniteScroll>
+        {/* <div className="container d-flex justify-content-between">
+          <button
+            disabled={this.state.page <= 1}
+            type="button"
+            className="btn btn-dark"
+            onClick={this.handlePrevClick}
+          >
+            &larr; Previous
+          </button>
+          <button
+            disabled={
+              this.state.page + 1 >
+              Math.ceil(this.state.totalResults / this.props.pageSize)
+            }
+            type="button"
+            className="btn btn-dark"
+            onClick={this.handleNextClick}
+          >
+            Next &rarr;
+          </button>
+        </div> */}
+      </>
     );
   }
 }
