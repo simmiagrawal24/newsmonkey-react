@@ -80,7 +80,7 @@ const [articles,setArticles] = useState([])
 const [loading,setLoading] = useState(true)
 const [page , setPage] = useState(1)
 const [totalResults , setTotalResults] = useState(0)
-// document.title = `${this.capitalize(props.category)} - NewsMonkey`;
+
   
   const capitalize = (string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -106,6 +106,7 @@ const [totalResults , setTotalResults] = useState(0)
   }
 
   useEffect(() => {
+    document.title = `${this.capitalize(props.category)} - NewsMonkey`;
     updateNews();
   
   }, [])
